@@ -38,12 +38,17 @@ jobs:
 
       - name: Install
         run: npm install -g yarn
+        working-directory: country-flags-app-main
 
       - name: Install
         run: yarn install
+        working-directory: country-flags-app-main
 
       - name: Run Lint
         run: yarn lint --quiet
+        working-directory: country-flags-app-main
 
       - name: Run Test
         run: yarn run test:coverage
+        working-directory: country-flags-app-main
+
