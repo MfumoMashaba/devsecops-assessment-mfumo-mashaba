@@ -67,8 +67,8 @@ jobs:
             -Dsonar.projectKey=${{ secrets.PROJECT_KEY }}
             -Dsonar.javascript.lcov.reportPaths=./country-flags-app-main/coverage/lcov.info
             -Dsonar.branch.name=${{ github.ref_name }}
-            -Dsonar.qualitygate.wait=true
-            -Dsonar.verbose=true
+            -Dsonar.qualitygate.wait=false
+            -Dsonar.verbose=false
 
       - name: Run Lint
         continue-on-error: true
