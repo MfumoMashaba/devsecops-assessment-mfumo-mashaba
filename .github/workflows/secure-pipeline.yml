@@ -64,7 +64,7 @@ jobs:
           projectBaseDir: country-flags-app-main/src
           args: >
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.projectKey=${{ secrets.PROJECT_KEY }}
             -Dsonar.javascript.lcov.reportPaths=./country-flags-app-main/coverage/lcov.info
             -Dsonar.branch.name=${{ github.ref_name }}
             -Dsonar.qualitygate.wait=true
