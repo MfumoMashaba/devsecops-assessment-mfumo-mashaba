@@ -31,7 +31,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: contry-flags-app-main
+        working-directory: country-flags-app-main
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -42,13 +42,17 @@ jobs:
 
       - name: Install
         run: npm install -g yarn
+        working-directory: country-flags-app-main
 
       - name: Install
         run: yarn install
+        working-directory: country-flags-app-main
 
       - name: Run Lint
         run: yarn lint --quiet
+        working-directory: country-flags-app-main
 
       - name: Run Test
         run: yarn run test:coverage
+        working-directory: country-flags-app-main
 
