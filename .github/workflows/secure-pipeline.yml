@@ -88,8 +88,9 @@ jobs:
       - name: Docker Build
         run: |
           docker build -t country-flags-app-main:${{ github.run_number }} .
+        working-directory: country-flags-app-main
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy Image scanner
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'country-flags-app-main:${{ github.run_number }}'
@@ -102,10 +103,20 @@ jobs:
       - name: Inject Image Tag
         run: |
           sed -i.bak "s/TAG_PARAMETER/${{ github.run_number }}/g" k8s-deployment.yaml
+        working-directory: infrastructure/k8s/
+
+      - name: Run Trivy k8s scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: ./infrastructure/k8s/
+          severity: 'CRITICAL,HIGH'
 
       - name: Deploy k8s File
         continue-on-error: true
         run: kubectl apply -f k8s-deployment.yaml
+        working-directory: infrastructure/k8s
+      
       
 
           
