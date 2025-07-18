@@ -1,0 +1,122 @@
+
+name: frontend-ci
+
+# Controls when the workflow will run if changes are made to the below branches and folders it will trigger a run
+on:
+  push:
+    branches: [ "main", "candidate-assessment" ]
+    paths:
+      - 'country-flags-app-main/**'
+      - '.github/**'
+  pull_request:
+    branches: [ "main", "candidate-assessment" ]
+    paths:
+      - 'country-flags-app-main/**'
+      - '.github/**'
+
+
+  workflow_dispatch:
+
+jobs:
+  
+  frontend-build:
+    runs-on: ubuntu-latest
+    environment: Sonarcloud # This is for env secrets to be used 
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    defaults:
+      run:
+        working-directory: country-flags-app-main
+
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+          
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }} #node version to used for the build
+
+      - name: Install Yarn
+        run: npm install -g yarn
+        working-directory: country-flags-app-main #install yarn cli
+
+      - name: Install Dependencies
+        run: yarn install #install project dependencies
+        working-directory: country-flags-app-main
+        
+
+      - name: Yarn Build
+        run: yarn build #generate files to be used to run the app
+        working-directory: country-flags-app-main
+
+      - name: SonarCube Scan
+        uses: sonarsource/sonarcloud-github-action@v5.0.0 #use sonarcloud for SAST
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: country-flags-app-main/src
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ secrets.PROJECT_KEY }}
+            -Dsonar.javascript.lcov.reportPaths=./country-flags-app-main/coverage/lcov.info
+            -Dsonar.branch.name=${{ github.ref_name }}
+            -Dsonar.qualitygate.wait=false
+            -Dsonar.verbose=false
+
+      - name: Run Lint
+        continue-on-error: true
+        run: yarn lint --quiet #lint application code
+        working-directory: country-flags-app-main
+
+      - name: Run Test
+        run: yarn run test:coverage #generate application code coverage
+        working-directory: country-flags-app-main
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3 #login before the docker build
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER }}
+
+      - name: Docker Build #build docker image and tag using the run number i.e each run represent a build version
+        run: |
+          ls -la 
+          docker build -t country-flags-app-main:${{ github.run_number }} . --build-arg FILES=build
+        working-directory: country-flags-app-main
+
+      - name: Run Trivy Image scanner #Scan image for any vulnerabilities and fail workflow if any is found
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'country-flags-app-main:${{ github.run_number }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          
+      - name: Inject Image Tag #if previous tasks passes replace image tag parameter in k8s file with run number
+        run: |
+          sed -i.bak "s/TAG_PARAMETER/${{ github.run_number }}/g" k8s-deployment.yaml
+        working-directory: infrastructure/k8s/
+
+      - name: Run Trivy k8s scanner # scan k8s file
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: ./infrastructure/k8s/
+          severity: 'CRITICAL,HIGH'
+
+      - name: Deploy k8s File #this won't run because there isn't an existing k8s cluster 
+        continue-on-error: true
+        run: kubectl apply -f k8s-deployment.yaml
+        working-directory: infrastructure/k8s
+      
+      
+
+          
+      
+
