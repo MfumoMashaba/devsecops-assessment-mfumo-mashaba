@@ -70,6 +70,15 @@ jobs:
             -Dsonar.qualitygate.wait=false
             -Dsonar.verbose=false
 
+      - name: SonarQube Quality Gate check
+        continue-on-error: false
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        with:
+          pollingTimeoutSec: 600
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
       - name: Run Lint
         continue-on-error: true
         run: yarn lint --quiet
