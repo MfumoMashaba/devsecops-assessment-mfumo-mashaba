@@ -1,9 +1,8 @@
 
 name: frontend-ci
 
-# Controls when the workflow will run
+# Controls when the workflow will run if changes are made to the below branches and folders it will trigger a run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main", "candidate-assessment" ]
     paths:
@@ -15,16 +14,14 @@ on:
       - 'country-flags-app-main/**'
       - '.github/**'
 
-  # Allows you to run this workflow manually from the Actions tab
+
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  
   frontend-build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    environment: Sonarcloud
+    environment: Sonarcloud # This is for env secrets to be used 
     strategy:
       matrix:
         node-version: [18.x]
@@ -33,7 +30,7 @@ jobs:
       run:
         working-directory: country-flags-app-main
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,23 +38,23 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }} #node version to used for the build
 
       - name: Install Yarn
         run: npm install -g yarn
-        working-directory: country-flags-app-main
+        working-directory: country-flags-app-main #install yarn cli
 
       - name: Install Dependencies
-        run: yarn install
+        run: yarn install #install project dependencies
         working-directory: country-flags-app-main
         
 
       - name: Yarn Build
-        run: yarn build
+        run: yarn build #generate files to be used to run the app
         working-directory: country-flags-app-main
 
       - name: SonarCube Scan
-        uses: sonarsource/sonarcloud-github-action@v5.0.0
+        uses: sonarsource/sonarcloud-github-action@v5.0.0 #use sonarcloud for SAST
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
@@ -72,26 +69,26 @@ jobs:
 
       - name: Run Lint
         continue-on-error: true
-        run: yarn lint --quiet
+        run: yarn lint --quiet #lint application code
         working-directory: country-flags-app-main
 
       - name: Run Test
-        run: yarn run test:coverage
+        run: yarn run test:coverage #generate application code coverage
         working-directory: country-flags-app-main
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3 #login before the docker build
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER }}
 
-      - name: Docker Build
+      - name: Docker Build #build docker image and tag using the run number i.e each run represent a build version
         run: |
-          ls -latrR build
+          ls -la 
           docker build -t country-flags-app-main:${{ github.run_number }} . --build-arg FILES=build
         working-directory: country-flags-app-main
 
-      - name: Run Trivy Image scanner
+      - name: Run Trivy Image scanner #Scan image for any vulnerabilities and fail workflow if any is found
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'country-flags-app-main:${{ github.run_number }}'
@@ -101,19 +98,19 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
           
-      - name: Inject Image Tag
+      - name: Inject Image Tag #if previous tasks passes replace image tag parameter in k8s file with run number
         run: |
           sed -i.bak "s/TAG_PARAMETER/${{ github.run_number }}/g" k8s-deployment.yaml
         working-directory: infrastructure/k8s/
 
-      - name: Run Trivy k8s scanner
+      - name: Run Trivy k8s scanner # scan k8s file
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: config
           scan-ref: ./infrastructure/k8s/
           severity: 'CRITICAL,HIGH'
 
-      - name: Deploy k8s File
+      - name: Deploy k8s File #this won't run because there isn't an existing k8s cluster 
         continue-on-error: true
         run: kubectl apply -f k8s-deployment.yaml
         working-directory: infrastructure/k8s

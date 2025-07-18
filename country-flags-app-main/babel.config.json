@@ -11,3 +11,5 @@
     "@babel/preset-typescript"
   ]
 }
+
+//I changed this to bypass the ECMA script error when building
