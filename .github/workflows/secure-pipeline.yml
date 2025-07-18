@@ -88,7 +88,7 @@ jobs:
       - name: Docker Build
         run: |
           ls -latrR build
-          docker build -t country-flags-app-main:${{ github.run_number }} . --build-arg FILES=dist/
+          docker build -t country-flags-app-main:${{ github.run_number }} . --build-arg FILES=build
         working-directory: country-flags-app-main
 
       - name: Run Trivy Image scanner
