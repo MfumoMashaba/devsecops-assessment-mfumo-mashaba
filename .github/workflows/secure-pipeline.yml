@@ -29,6 +29,10 @@ jobs:
       matrix:
         node-version: [18.x]
 
+    defaults:
+      run:
+        working-directory: contry-flags-app-main
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
@@ -38,17 +42,13 @@ jobs:
 
       - name: Install
         run: npm install -g yarn
-        working-directory: ${{ github.workspace}}/country-flags-app-main
 
       - name: Install
         run: yarn install
-        working-directory: ${{ github.workspace}}/country-flags-app-main
 
       - name: Run Lint
         run: yarn lint --quiet
-        working-directory: ${{ github.workspace}}/country-flags-app-main
 
       - name: Run Test
         run: yarn run test:coverage
-        working-directory: ${{ github.workspace}}/country-flags-app-main
 
