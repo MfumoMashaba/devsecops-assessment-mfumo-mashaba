@@ -15,7 +15,7 @@ COPY ./$FILES .
 
 RUN adduser --disabled-password \
     --home /home/appuser \
-    --gecos '' appuser \
+    --gecos '' appuser 
 RUN chown -R appuser /app
 RUN chown -R appuser /mnt
 USER appuser
