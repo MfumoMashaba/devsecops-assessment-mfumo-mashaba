@@ -87,7 +87,7 @@ jobs:
 
       - name: Docker Build
         run: |
-          ls -latrR 
+          ls -latrR build
           docker build -t country-flags-app-main:${{ github.run_number }} . --build-arg FILES=dist/
         working-directory: country-flags-app-main
 
