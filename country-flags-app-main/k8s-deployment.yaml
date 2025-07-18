@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: country-flags-app-main
+  namespace: $namespace
+spec:
+  selector:
+    matchLables:
+      app: country-flags-app-main
+  replicas: $replicas
+  template:
+    metadata:
+      labels:
+        app: country-flags-app-main
+    spec:
+      serviceAccountName: $k8s-service-account
+      containers:
+      - name: country-flags-app-main
+        image: country-flags-app-main:TAG_PARAMETER
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 100
+        resources:
+          requests:
+            cpu: 250m
+            memory: 500Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        ports:
+        - containerPort: 3000
+---
+apiVersion:
+kind: Service
+metadata:
+  name: country-flags-app-main-service
+  namespace: $namespace
+spec:
+  ports:
+  - port: 443
+    targetPort: 3000
+  selector:
+    app: country-flags-app-main
