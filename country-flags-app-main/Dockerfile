@@ -3,14 +3,13 @@ ARG FILES
 
 WORKDIR /app
 
-RUN apt-get update -y \
-    && apt-get install \
-    && curl \
-    && locales \
-    -y
+RUN apk update \
+    && apk add --no-cache \
+    curl \
+    busybox-extras
 
 ENV TZ=Africa/Johannesburg
-RUN ln -snf /uusr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 COPY ./$FILES .
 
