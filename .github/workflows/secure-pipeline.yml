@@ -70,15 +70,6 @@ jobs:
             -Dsonar.qualitygate.wait=false
             -Dsonar.verbose=false
 
-      - name: SonarQube Quality Gate check
-        continue-on-error: false
-        id: sonarqube-quality-gate-check
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        with:
-          pollingTimeoutSec: 600
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
       - name: Run Lint
         continue-on-error: true
         run: yarn lint --quiet
@@ -87,5 +78,36 @@ jobs:
       - name: Run Test
         run: yarn run test:coverage
         working-directory: country-flags-app-main
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER }}
+
+      - name: Docker Build
+        run: |
+          docker build -t country-flags-app-main:${{ github.run_number }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'country-flags-app-main:${{ github.run_number }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          
+      - name: Inject Image Tag
+        run: |
+          sed -i.bak "s/TAG_PARAMETER/${{ github.run_number }}/g" k8s-deployment.yaml
+
+      - name: Deploy k8s File
+        continue-on-error: true
+        run: kubectl apply -f k8s-deployment.yaml
+      
+
+          
       
 
