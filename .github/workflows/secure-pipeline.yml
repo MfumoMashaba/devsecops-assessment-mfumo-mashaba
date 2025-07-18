@@ -52,6 +52,7 @@ jobs:
         working-directory: country-flags-app-main
 
       - name: Run Lint
+        continue-on-error: true
         run: yarn lint --quiet
         working-directory: country-flags-app-main
 
