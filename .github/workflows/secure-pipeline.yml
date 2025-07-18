@@ -51,6 +51,7 @@ jobs:
       - name: Install Dependencies
         run: yarn install
         working-directory: country-flags-app-main
+        
 
       - name: Yarn Build
         run: yarn build
