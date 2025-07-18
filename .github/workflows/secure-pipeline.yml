@@ -9,10 +9,12 @@ on:
     branches: [ "main", "candidate-assessment" ]
     paths:
       - 'country-flags-app-main/**'
+      - '.github/**'
   pull_request:
     branches: [ "main", "candidate-assessment" ]
     paths:
       - 'country-flags-app-main/**'
+      - '.github/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
