@@ -43,13 +43,31 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install
+      - name: Install Yarn
         run: npm install -g yarn
         working-directory: country-flags-app-main
 
-      - name: Install
+      - name: Install Dependencies
         run: yarn install
         working-directory: country-flags-app-main
+
+      - name: Yarn Build
+        run: yarn build
+        working-directory: country-flags-app-main
+
+      - name: SonarCube Scan
+        uses: sonarsource/sonarcloud-github-action@v5.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: country-flags-app-main/src
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.javascript.lcov.reportPaths=./country-flags-app-main/coverage/lcov.info
+            -Dsonar.branch.name=${{ github.ref_name }}
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.verbose=true
 
       - name: Run Lint
         continue-on-error: true
@@ -59,4 +77,5 @@ jobs:
       - name: Run Test
         run: yarn run test:coverage
         working-directory: country-flags-app-main
+      
 
